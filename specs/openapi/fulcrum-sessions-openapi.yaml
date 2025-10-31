@@ -1,0 +1,141 @@
+openapi: 3.0.3
+info:
+  title: Fulcrum MVP Session & Sandbox API
+  version: "0.1.0"
+  description: API for creating sessions, sending human input, and provisioning sandboxes for AGE seeds (MVP).
+servers:
+  - url: https://api.fulcrum.example.com/v1
+paths:
+  /sessions:
+    post:
+      summary: Create a new collaboration session (handshake + consent)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSessionRequest'
+      responses:
+        '201':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateSessionResponse'
+  /sessions/{sessionId}/input:
+    post:
+      summary: Send human input to the session and get CHE coherence decision
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionInput'
+      responses:
+        '200':
+          description: CHE decision
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CHEDecision'
+  /sandboxes/{sandboxId}/provision:
+    post:
+      summary: Request provisioning of a sandbox for an AGE seed (CHE authorization required)
+      parameters:
+        - name: sandboxId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProvisionRequest'
+      responses:
+        '202':
+          description: Sandbox provisioning accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProvisionResponse'
+components:
+  schemas:
+    CreateSessionRequest:
+      type: object
+      required:
+        - human_id
+        - consent_token
+      properties:
+        human_id:
+          type: string
+          description: Human identifier (UUID)
+        consent_token:
+          type: string
+          description: Consent handshake token (signed)
+        metadata:
+          type: object
+          additionalProperties: true
+    CreateSessionResponse:
+      type: object
+      properties:
+        session_id:
+          type: string
+        handshake_token:
+          type: string
+        threshold:
+          type: number
+          format: float
+          description: coherence threshold for the session
+    SessionInput:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+        modalities:
+          type: object
+          description: optional multimodal data URLs or references
+        biometric_snapshot:
+          type: string
+          description: hashed biometric snapshot or pointer
+    CHEDecision:
+      type: object
+      properties:
+        coherence_score:
+          type: number
+          format: float
+        action:
+          type: string
+          description: one of [proceed, clarify, adjust, escalate]
+        action_payload:
+          type: object
+          additionalProperties: true
+        ledger_digest:
+          type: string
+          description: pointer/hash written to transparency ledger
+    ProvisionRequest:
+      type: object
+      properties:
+        session_id:
+          type: string
+        seed_parameters:
+          type: object
+          additionalProperties: true
+    ProvisionResponse:
+      type: object
+      properties:
+        sandbox_id:
+          type: string
+        status:
+          type: string
+        node_hint:
+          type: string

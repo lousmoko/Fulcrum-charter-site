@@ -1,0 +1,46 @@
+@startuml
+skinparam componentStyle rectangle
+title Fulcrum MVP Deployment Diagram
+
+package "Fulcrum Cluster (Kubernetes)" {
+  node "API Gateway / Ingress" as gateway
+  node "Human Gateway Service\n(Web UI, Auth)" as human_gateway
+  node "Core Harmonic Engine (CHE)\nmicroservice" as che
+  node "Energetic & Ethical\nEquilibrium Layer (E³L)" as e3l
+  node "Transparency Ledger Writer\n(ledger client)" as ledger
+  node "Sandbox Operator" as soperator
+  node "Sandbox Pod\n(AGE runtime + Guardian sidecar)" as sandbox
+  node "Object Store (S3)\nsession logs" as objectstore
+  node "Graph DB (Neo4j)\nLattice Registry" as graphdb
+  node "Prometheus / Grafana\nMonitoring" as observ
+  node "HashiCorp Vault\nSecrets" as vault
+
+  gateway --> human_gateway : HTTPS / WebSocket
+  human_gateway --> che : /sessions, /input
+  che --> soperator : provision sandbox
+  soperator --> sandbox : schedule pod
+  sandbox --> che : AI responses
+  che --> e3l : request ethics / energy checks
+  e3l --> ledger : append digest
+  ledger --> objectstore : store large logs (encrypted)
+  che --> graphdb : register AGE / session metadata
+  sandbox --> observ : metrics
+  soperator --> vault : retrieve keys
+  ledger --> vault : sign transactions
+}
+
+note right of che
+  CHE computes:
+  - intent & emotional vectors
+  - coherence score
+  - realignment actions
+end note
+
+note left of e3l
+  E³L components:
+  - Energy Oracle
+  - Ethical Resonance Engine
+  - Transparency Ledger
+end note
+
+@enduml
